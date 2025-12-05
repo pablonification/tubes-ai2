@@ -6,14 +6,7 @@ from collections import Counter
 
 class KNN:
     def __init__(self, k=3, metric='euclidean', weights='uniform'):
-        """
-        Inisialisasi Model KNN.
-        
-        Parameters:
-        - k (int): Jumlah tetangga terdekat.
-        - metric (str): Metode jarak ('euclidean', 'manhattan').
-        - weights (str): 'uniform' (voting biasa) atau 'distance' (BONUS: weighted voting).
-        """
+        # Inisialisasi parameter KNN
         self.k = k
         self.metric = metric
         self.weights = weights
@@ -21,45 +14,38 @@ class KNN:
         self.y_train = None
 
     def fit(self, X, y):
-        """
-        Melatih model (menyimpan data latih).
-        """
+       # Menyimpan data latih
         self.X_train = np.array(X)
         self.y_train = np.array(y)
         print(f"Model KNN dilatih dengan {len(self.X_train)} data.")
 
     def _calculate_distance(self, x_query):
-        """
-        Menghitung jarak antara satu data test (x_query) dengan seluruh X_train.
-        Menggunakan Vectorization (Broadcasting) agar cepat.
-        """
+        # Menghitung jarak antara x_query dan semua titik di X_train
         if self.metric == 'euclidean':
-            # Rumus: sqrt(sum((x - y)^2))
             return np.sqrt(np.sum((self.X_train - x_query)**2, axis=1))
         
         elif self.metric == 'manhattan':
-            # Rumus: sum(|x - y|)
             return np.sum(np.abs(self.X_train - x_query), axis=1)
         
         else:
             raise ValueError(f"Metric '{self.metric}' belum diimplementasikan.")
 
     def _predict_one(self, x_query):
-        """
-        Memprediksi satu sampel data.
-        """
-        # 1. Hitung jarak ke seluruh data latih
-        distances = self._calculate_distance(x_query)
+        # Memprediksi label untuk satu data x_query
+        distances = self._calculate_distance(x_query) # Hitung jarak 
         
-        # 2. Ambil K indeks dengan jarak terdekat
+        # Temukan k tetangga terdekat
         k_indices = np.argsort(distances)[:self.k]
         k_nearest_labels = self.y_train[k_indices]
         k_nearest_dists = distances[k_indices]
         
-        # 3. Voting Mechanism
+        # Voting berdasarkan bobot
         if self.weights == 'uniform':
             most_common = Counter(k_nearest_labels).most_common(1)
-            return most_common[0][0]
+            if most_common:
+                return most_common[0][0]
+            else:
+                return k_nearest_labels[0]
         
         elif self.weights == 'distance':
             epsilon = 1e-5 
@@ -70,16 +56,17 @@ class KNN:
                 class_weights[label] = class_weights.get(label, 0) + w
             
             return max(class_weights, key=class_weights.get)
+        
+        else:
+            raise ValueError(f"Weights '{self.weights}' tidak valid. Gunakan 'uniform' atau 'distance'.")
 
     def predict(self, X_test):
-        """
-        Memprediksi sekumpulan data X_test.
-        """
+        # Memprediksi label untuk data uji X_test
         X_test = np.array(X_test)
         predictions = [self._predict_one(x) for x in X_test]
         return np.array(predictions)
 
-    # Save & Load Model
+    # Simpan model
     def save_model(self, filename):
         """Menyimpan objek model ke file .pkl"""
         with open(filename, 'wb') as f:
@@ -92,12 +79,8 @@ class KNN:
         with open(filename, 'rb') as f:
             return pickle.load(f)
 
-# Visualisasi Proses Training/Klasifikasi (Bonus)
+# Bonus
 def generate_knn_video(model, X_train_2d, y_train, x_query_2d, filename='knn_process.mp4'):
-    """
-    Membuat video animasi proses pencarian tetangga terdekat.
-    Syarat: Data harus sudah direduksi ke 2D (misal pakai PCA) agar bisa di-plot.
-    """
     print("Sedang men-generate video visualisasi...")
     
     fig, ax = plt.subplots(figsize=(8, 6))
@@ -129,5 +112,11 @@ def generate_knn_video(model, X_train_2d, y_train, x_query_2d, filename='knn_pro
         print(f"Video berhasil disimpan: {filename}")
     except Exception as e:
         print(f"Gagal menyimpan video (pastikan ffmpeg terinstall): {e}")
-        # Fallback ke GIF jika mp4 gagal
-        ani.save(filename.replace('.mp4', '.gif'), writer='pillow', fps=30)
+        # Coba simpan jadi GIF kalo mp4 gagal
+        try:
+            ani.save(filename.replace('.mp4', '.gif'), writer='pillow', fps=30)
+            print(f"Video disimpan sebagai GIF: {filename.replace('.mp4', '.gif')}")
+        except Exception as e2:
+            print(f"Gagal menyimpan video sebagai GIF: {e2}")
+    
+    plt.close(fig)
