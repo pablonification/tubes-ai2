@@ -66,7 +66,7 @@ tubes-ai2/
 
 ---
 
-## 👥 Pembagian Tugas Anggota Kelompok
+## Pembagian Tugas Anggota Kelompok
 
 ### 1. **Andhika Maulana Addiputra (18223005)**
 
@@ -132,7 +132,7 @@ tubes-ai2/
 
 ---
 
-## 📊 Dataset
+## Dataset
 
 Dataset yang digunakan adalah dataset klasifikasi yang tersedia di folder `data/`. Dataset terdiri dari:
 - **train.csv**: Data training untuk melatih model
